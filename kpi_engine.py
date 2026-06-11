@@ -142,7 +142,126 @@ def plot_downtime_trend(df, week=None):
 
 
 # # Default — last week with data
-plot_downtime_trend(df)
+# plot_downtime_trend(df)
 
-# Or pass a specific week
-# plot_downtime_trend(df, week='2026-01-05')
+# Fault type distribution
+def plot_fault_type(df, start_date=None, end_date=None):
+    df = df.copy()
+    df['date'] = pd.to_datetime(df['date'], format='%d-%m-%Y')
+
+    # ── Filter by date range if provided ──────────────────────────────────────
+    if start_date and end_date:
+        df = df[(df['date'] >= pd.Timestamp(start_date)) & 
+                (df['date'] <= pd.Timestamp(end_date))]
+
+    # ── Aggregate ──────────────────────────────────────────────────────────────
+    fault_counts = df['Fault Type'].value_counts()
+    total        = fault_counts.sum()
+
+    # Sort ascending so largest bar is on top
+    fault_counts = fault_counts.sort_values(ascending=True)
+
+    labels  = fault_counts.index.tolist()
+    counts  = fault_counts.values.tolist()
+    pcts    = [c / total * 100 for c in counts]
+
+    # ── Plot ───────────────────────────────────────────────────────────────────
+    fig, ax = plt.subplots(figsize=(8, 4))
+    fig.patch.set_facecolor('white')
+    ax.set_facecolor('white')
+
+    bars = ax.barh(labels, pcts, color='#6C63FF', height=0.5, zorder=2)
+
+    # Label each bar: count (pct%)
+    for bar, count, pct in zip(bars, counts, pcts):
+        ax.text(bar.get_width() + 0.5, bar.get_y() + bar.get_height() / 2,
+                f'{count} ({pct:.1f}%)',
+                va='center', ha='left', fontsize=9, color='#333')
+
+    ax.set_xlim(0, 115)
+    ax.set_xlabel('% of Total Outages', fontsize=10, color='#444')
+    ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f'{int(v)}%'))
+    ax.set_xticks([0, 25, 50, 75, 100])
+    ax.tick_params(axis='both', labelsize=9)
+    ax.spines[['top', 'right', 'left']].set_visible(False)
+    ax.grid(axis='x', linestyle='--', alpha=0.4, zorder=0)
+
+    ax.set_title('FAULT TYPE CONTRIBUTION', fontweight='bold',
+                 fontsize=11, loc='left', pad=12)
+
+    plt.tight_layout()
+    plt.savefig('fault_type_contribution.png', dpi=150, bbox_inches='tight')
+    plt.show()
+
+
+# All data
+# plot_fault_type(df)
+
+
+# Outages by Severity
+def plot_outages_by_severity(df, start_date=None, end_date=None):
+    df = df.copy()
+    df['date'] = pd.to_datetime(df['date'], format='%d-%m-%Y')
+
+    if start_date and end_date:
+        df = df[(df['date'] >= pd.Timestamp(start_date)) &
+                (df['date'] <= pd.Timestamp(end_date))]
+
+    order  = ['S1', 'S2', 'S3']
+    severity_counts = df['Severity'].value_counts()
+    counts = [severity_counts.get(s, 0) for s in order]
+    total  = sum(counts)
+    pcts   = [c / total * 100 for c in counts]
+    colors = ['#EF4444', '#F97316', '#86EFAC']
+
+    fig, ax = plt.subplots(figsize=(6, 4.5))
+    fig.patch.set_facecolor('white')
+    ax.set_facecolor('white')
+
+    wedges, _ = ax.pie(
+        counts,
+        colors=colors,
+        startangle=90,
+        counterclock=False,
+        wedgeprops=dict(width=0.55, edgecolor='white', linewidth=2),
+    )
+
+    # Centre text
+    ax.text(0, 0.08, str(total), ha='center', va='center',
+            fontsize=26, fontweight='bold', color='#0f172a')
+    ax.text(0, -0.18, 'Total', ha='center', va='center',
+            fontsize=11, color='#64748b')
+
+    # ── Clean legend with count + pct ─────────────────────────────────────────
+    legend_labels = [
+        f'S1 Critical\n{counts[0]} ({pcts[0]:.1f}%)',
+        f'S2 Major\n{counts[1]} ({pcts[1]:.1f}%)',
+        f'S3 Minor\n{counts[2]} ({pcts[2]:.1f}%)',
+    ]
+    legend = ax.legend(
+        wedges,
+        legend_labels,
+        loc='center left',
+        bbox_to_anchor=(0.95, 0.5),
+        frameon=False,
+        fontsize=9,
+        labelspacing=1.2,
+        handlelength=1.2,
+        handleheight=1.2,
+    )
+
+    ax.set_title('OUTAGES BY SEVERITY', fontweight='bold',
+                 fontsize=11, loc='left', pad=12)
+
+    plt.tight_layout()
+    plt.savefig('outages_by_severity.png', dpi=150, bbox_inches='tight')
+    plt.show()
+
+
+# All data
+plot_outages_by_severity(df)
+
+# Filtered by date range
+plot_outages_by_severity(df, start_date='2026-01-01', end_date='2026-03-31')
+
+    
