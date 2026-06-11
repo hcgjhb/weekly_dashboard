@@ -259,9 +259,135 @@ def plot_outages_by_severity(df, start_date=None, end_date=None):
 
 
 # All data
-plot_outages_by_severity(df)
+# plot_outages_by_severity(df)
 
-# Filtered by date range
-plot_outages_by_severity(df, start_date='2026-01-01', end_date='2026-03-31')
+# # Filtered by date range
+# plot_outages_by_severity(df, start_date='2026-01-01', end_date='2026-03-31')
 
-    
+def customer_risk_ranking(df, top_n=10):
+ 
+    df = df.copy()
+ 
+    # -----------------------------
+    # Parse customer list
+    # -----------------------------
+    if isinstance(df['Customers'].iloc[0], str):
+        df['Customers'] = df['Customers'].apply(ast.literal_eval)
+ 
+    # -----------------------------
+    # Numeric MTTR
+    # -----------------------------
+    df['MTTR_Minutes'] = pd.to_numeric(
+        df['MTTR in \nMints'],
+        errors='coerce'
+    ).fillna(0)
+ 
+    # -----------------------------
+    # Severity weights
+    # -----------------------------
+    severity_weights = {
+        'S1': 5,
+        'S2': 3,
+        'S3': 1
+    }
+ 
+    df['severity_score'] = (
+        df['Severity']
+        .map(severity_weights)
+        .fillna(1)
+    )
+ 
+    # -----------------------------
+    # One row per customer
+    # -----------------------------
+    customer_df = df.explode('Customers')
+    customer_df.rename(
+        columns={'Customers': 'Customer'},
+        inplace=True
+    )
+ 
+    # -----------------------------
+    # Aggregate metrics
+    # -----------------------------
+    summary = (
+        customer_df.groupby('Customer')
+        .agg(
+            outages=('Sr. No.', 'count'),
+            downtime_mins=('MTTR_Minutes', 'sum'),
+            avg_mttr=('MTTR_Minutes', 'mean'),
+            severity_score=('severity_score', 'sum')
+        )
+        .reset_index()
+    )
+ 
+    summary['downtime_hrs'] = (
+        summary['downtime_mins'] / 60
+    ).round(1)
+ 
+    summary['avg_mttr'] = (
+        summary['avg_mttr']
+    ).round(1)
+ 
+    # -----------------------------
+    # Risk Score
+    # -----------------------------
+    summary['risk_score'] = (
+        0.35 * (summary['outages'] / summary['outages'].max()) +
+        0.30 * (summary['downtime_mins'] / summary['downtime_mins'].max()) +
+        0.15 * (summary['avg_mttr'] / summary['avg_mttr'].max()) +
+        0.20 * (summary['severity_score'] / summary['severity_score'].max())
+    )
+ 
+    # -----------------------------
+    # Risk Level
+    # -----------------------------
+    summary['risk_level'] = np.select(
+        [
+            summary['risk_score'] >= 0.70,
+            summary['risk_score'] >= 0.40
+        ],
+        [
+            'High',
+            'Watchlist'
+        ],
+        default='Healthy'
+    )
+ 
+    # -----------------------------
+    # Sort
+    # -----------------------------
+    risk_order = {
+        'High': 0,
+        'Watchlist': 1,
+        'Healthy': 2
+    }
+ 
+    summary['risk_order'] = (
+        summary['risk_level']
+        .map(risk_order)
+    )
+ 
+    summary = summary.sort_values(
+        ['risk_order', 'risk_score'],
+        ascending=[True, False]
+    )
+ 
+    summary = summary[
+        [
+            'Customer',
+            'outages',
+            'downtime_hrs',
+            'avg_mttr',
+            'risk_level'
+        ]
+    ]
+ 
+    summary.columns = [
+        'Customer',
+        'Outages',
+        'Downtime (Hrs)',
+        'Avg MTTR (Min)',
+        'Risk Level'
+    ]
+ 
+    return summary.head(top_n)
