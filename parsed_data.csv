@@ -183,8 +183,8 @@ At 12:37 IST, a minor span fluctuation was observed between Phadge and SV-16.",F
 12:57:00",00:11:00,11,"MUM-DEL: Amazon(8*100G), 
 MUM-KHU: Kuier(1*100G)
 DEL-HYD:Oracle(1*100G)","After restoration of the fiber cut between Langhanaj and Gift City Lavarpar (on the protection path), Protection SNC was in reversion state. At 12:46 IST, an “Automatic Power Reduction (APR) Active” alarm was observed on the worker path at Devgarhbaria.",Fiber,Smartnet,,,,"000137, 000138, 000139, 000140, 000141, 000160, 000290, 000291, 001215, 001322",,"['Amazon', 'Kuiper', 'Oracle']",18-02-2026
-23,S2,Feb-26,18-11-2026 13:32,"18-11-2026
-13:33:54",01:00:05,1,Meta(1*100G MUM-DEL),Service was affected due to ongoing  “Automatic Power Reduction (APR) Active” alarm on the worker path at Devgarhbaria since 12:46 IST & fiber span fluctuation on protection path between IBM to GPX-2 in Mumbai-Delhi NLD section.,Fiber,Smartnet,,,,"001232, ",,['Meta'],18-11-2026
+23,S2,Feb-26,18-02-2026 13:32,"18-02-2026
+13:33:54",01:00:05,1,Meta(1*100G MUM-DEL),Service was affected due to ongoing  “Automatic Power Reduction (APR) Active” alarm on the worker path at Devgarhbaria since 12:46 IST & fiber span fluctuation on protection path between IBM to GPX-2 in Mumbai-Delhi NLD section.,Fiber,Smartnet,,,,"001232, ",,['Meta'],18-02-2026
 24,S2,Feb-26,18-02-2026 14:39,"18-02-2026
 14:47:00",00:08:00,8,"MUM-DEL: Amazon(19*100G), Meta(8*100G), Riot Games(1*10G), Cloudflare(1*100G), Oracle (1*100G), Sify(1*10G), Telstra(1*100G),
 MUM-KHU: Amazon Leo(1*100G)
